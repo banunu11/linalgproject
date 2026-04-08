@@ -2,7 +2,7 @@
 
 todo list:
 1. get basic summarizer to work
-   a. Cheryl - code summarizer.py
+   a. Cheryl - code main.py & write outline for paper
    b. Ben - find texts to use and write text scraper
    c. Cedric - code summarizer.py and PCA implementation
    d. Nathan - Paper writing and formatting
