@@ -1,0 +1,3 @@
+For instance, linear algebra is fundamental in modern presentations of geometry, including for defining basic objects such as lines, planes and rotations.
+Also, functional analysis, a branch of mathematical analysis, may be viewed as the application of linear algebra to function spaces.
+Linear algebra is central to almost all areas of mathematics.
