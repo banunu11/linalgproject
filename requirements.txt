@@ -1,3 +1,8 @@
 numpy
 scikit-learn
 nltk
+platform
+sys
+re
+beautiful soup 4
+urllib.parse 
