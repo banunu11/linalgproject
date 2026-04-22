@@ -4,5 +4,6 @@ nltk
 platform
 sys
 re
-beautiful soup 4
+beautifulsoup4
 urllib.parse 
+matplotlib
