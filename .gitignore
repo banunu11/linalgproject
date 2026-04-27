@@ -1,3 +1,6 @@
+# Compiler/Cache
+.pyc
+
 # Distribution / packaging
 .Python
 build/
