@@ -7,11 +7,15 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import matplotlib.pyplot as plt
 import re
 import sys
+import os
 import text_scraper
 
 nltk.download('punkt_tab', quiet=True)
 
 def preprocess(text):
+    text = re.sub(r'\n+', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    
     sentences = sent_tokenize(text)
     cleaned = []
 
@@ -42,29 +46,33 @@ def summarize(inPath, num_sentences):
 
     rank = np.argsort(importance)[::-1]
     
-    base = inPath.replace('.txt', '')
+    base = os.path.splitext(inPath)[0]
+    os.makedirs(base, exist_ok=True)
     output = '\n'.join([sentences[i] for i in rank[:n_comp]])
     output2 = '\n'.join(sentences)
 
-    with open(f'{base}_output.txt', 'w', encoding='utf-8') as file:
+    with open(f'{base}/output.txt', 'w', encoding='utf-8') as file:
         file.write(output)
 
-    with open(f'{base}_original.txt', 'w', encoding='utf-8') as file:
+    with open(f'{base}/original.txt', 'w', encoding='utf-8') as file:
         file.write(output2)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 6))
     ax1.bar(range(1, n_comp + 1), importance[rank[:n_comp]])
+    ax1.set_xticks(range(1, n_comp + 1))
+    ax1.set_xticklabels(range(1, n_comp + 1), rotation = 90)
     ax1.set_xlabel('Sentence Rank')
     ax1.set_ylabel('Importance Score')
 
     top_indices = np.sort(rank[:n_comp])
     ax2.bar(range(1, n_comp + 1), importance[top_indices])
-    ax2.set_xticks(range(1, n_comp + 1), top_indices + 1, rotation=90)
+    ax2.set_xticks(range(1, n_comp + 1))
+    ax2.set_xticklabels(top_indices + 1, rotation=90)
     ax2.set_xlabel('Sentence Index (original document order)')
     ax2.set_ylabel('Importance Score')
     fig.suptitle('Ranking of Sentence Importance')
 
-    plt.savefig(f'{base}_plot.png', dpi=150, bbox_inches='tight')
+    plt.savefig(f'{base}/plot.png', dpi=150, bbox_inches='tight')
     plt.close()
 
     return output
@@ -92,11 +100,11 @@ def summarize_text(text, num_sentences=3):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        summarize("articles/article_0001.txt", 50)
+        summarize("articles/article_0001.txt", 5)
         exit(0)
- 
+
     url = sys.argv[1]
     out = sys.argv[2] if len(sys.argv) > 2 else None
-    textPath = text_scraper.scrape(url, out)
+    textPath = text_scraper.scrape(url, output_path=out)
 
-    summarize(textPath, 50)
+    summarize(textPath, 3)
