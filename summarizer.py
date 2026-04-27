@@ -5,11 +5,17 @@ import string
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
 import matplotlib.pyplot as plt
+import re
+import sys
+import os
+import text_scraper
 
 nltk.download('punkt_tab', quiet=True)
-nltk.download('averaged_perceptron_tagger', quiet=True)
 
 def preprocess(text):
+    text = re.sub(r'\n+', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    
     sentences = sent_tokenize(text)
     cleaned = []
 
@@ -20,41 +26,85 @@ def preprocess(text):
 
     return [sentences, cleaned]
 
-
-if __name__ == "__main__":
-    with open('example1.txt', 'r') as file:
+def summarize(inPath, num_sentences):
+    with open(inPath, 'r', encoding='utf-8') as file:
         text = file.read()
-    
+
     # preprocess data
     [sentences, cleaned] = preprocess(text)
 
     vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
     X = (vectorizer.fit_transform(cleaned)).toarray()
 
-    n_comp = min(10, len(cleaned)) #we can modify this 
+    n_comp = min(num_sentences, len(cleaned)) #we can modify this
     pca = PCA(n_components=n_comp)
     X_pca = (pca.fit_transform(X))
 
     weights = pca.explained_variance_ratio_
     importance = np.dot(X_pca ** 2, weights)
-    importance = importance / importance.sum()
+    importance = importance / importance.sum() # normalize importance
 
     rank = np.argsort(importance)[::-1]
     
-    output = '\n'.join([sentences[i] for i in rank])
+    base = os.path.splitext(inPath)[0]
+    os.makedirs(base, exist_ok=True)
+    output = '\n'.join([sentences[i] for i in rank[:n_comp]])
+    output2 = '\n'.join(sentences)
 
-    with open('output.txt', 'w') as file:
+    with open(f'{base}/output.txt', 'w', encoding='utf-8') as file:
         file.write(output)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    ax1.bar(range(1, len(importance) + 1), importance[rank])
+    with open(f'{base}/original.txt', 'w', encoding='utf-8') as file:
+        file.write(output2)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 6))
+    ax1.bar(range(1, n_comp + 1), importance[rank[:n_comp]])
+    ax1.set_xticks(range(1, n_comp + 1))
+    ax1.set_xticklabels(range(1, n_comp + 1), rotation = 90)
     ax1.set_xlabel('Sentence Rank')
     ax1.set_ylabel('Importance Score')
 
-    ax2.bar(range(len(importance)), importance[rank])
-    ax2.set_xticks(range(len(importance)), rank + 1)
+    top_indices = np.sort(rank[:n_comp])
+    ax2.bar(range(1, n_comp + 1), importance[top_indices])
+    ax2.set_xticks(range(1, n_comp + 1))
+    ax2.set_xticklabels(top_indices + 1, rotation=90)
     ax2.set_xlabel('Sentence Index (original document order)')
-    ax1.set_ylabel('Importance Score')
+    ax2.set_ylabel('Importance Score')
     fig.suptitle('Ranking of Sentence Importance')
 
-    plt.show()
+    plt.savefig(f'{base}/plot.png', dpi=150, bbox_inches='tight')
+    plt.close()
+
+    return output
+
+def summarize_text(text, num_sentences=3):
+    """Replicates summarizer.py's ranking logic, returns top-k sentences."""
+    sentences, cleaned = preprocess(text)
+    if len(sentences) <= 1:
+        return ' '.join(sentences)
+    
+    n_comp = min(num_sentences, len(sentences))
+
+    vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
+    X = vectorizer.fit_transform(cleaned).toarray()
+
+    if n_comp < 1:
+        return ' '.join(sentences[:num_sentences])
+    pca = PCA(n_components=n_comp)
+    X_pca = pca.fit_transform(X)
+    weights = pca.explained_variance_ratio_
+    importance = np.dot(X_pca ** 2, weights)
+    rank = np.argsort(importance)[::-1][:num_sentences]
+    rank_sorted = sorted(rank)
+    return ' '.join([sentences[i] for i in rank_sorted])
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        summarize("articles/article_0001.txt", 5)
+        exit(0)
+
+    url = sys.argv[1]
+    out = sys.argv[2] if len(sys.argv) > 2 else None
+    textPath = text_scraper.scrape(url, output_path=out)
+
+    summarize(textPath, 3)

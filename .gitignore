@@ -1,3 +1,13 @@
+# Compiler/Cache
+*.pyc
+__pycache__/
+
+# Generated Artifacts
+scraped_data/
+testerfiles/
+articles/
+*.png
+
 # Distribution / packaging
 .Python
 build/

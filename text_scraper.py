@@ -1,8 +1,8 @@
 #imports
-from platform import node
 import sys
 import re
 import requests
+import os
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
@@ -79,16 +79,20 @@ def extract_text(html: str) -> str:
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
-def scrape(url: str, output_path: str | None = None) -> str:
+def scrape(url: str, output_dir: str = "scraped_data", output_path: str | None = None) -> str:
     print(f"Fetching: {url}")
     html = fetch_html(url)
     print("Extracting text…")
     text = extract_text(html)
 
-    if not output_path:
+    os.makedirs(output_dir, exist_ok=True)
+
+    if output_path is None:
         domain = urlparse(url).netloc.replace("www.", "")
         safe = re.sub(r"[^a-z0-9_-]", "_", domain)
-        output_path = f"{safe}.txt"
+        output_path = os.path.join(output_dir, f"{safe}.txt")
+    else:
+        output_path = os.path.join(output_dir, output_path)
  
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(text)
@@ -103,4 +107,4 @@ if __name__ == "__main__":
  
     url = sys.argv[1]
     out = sys.argv[2] if len(sys.argv) > 2 else None
-    scrape(url, out)
+    scrape(url, output_path=out)
