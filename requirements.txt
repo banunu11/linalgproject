@@ -1,9 +1,7 @@
 numpy
 scikit-learn
 nltk
-platform
-sys
-re
 beautifulsoup4
-urllib.parse 
 matplotlib
+rouge-score
+datasets
