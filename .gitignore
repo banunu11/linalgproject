@@ -1,5 +1,6 @@
 # Compiler/Cache
-.pyc
+*.pyc
+__pycache__/
 
 # Distribution / packaging
 .Python
