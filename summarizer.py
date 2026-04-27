@@ -72,7 +72,10 @@ def summarize(inPath, num_sentences):
 def summarize_text(text, num_sentences=3):
     """Replicates summarizer.py's ranking logic, returns top-k sentences."""
     sentences, cleaned = preprocess(text)
-    n_comp = min(num_sentences, len(cleaned))
+    if len(sentences) <= 1:
+        return ' '.join(sentences)
+    
+    n_comp = min(num_sentences, len(sentences))
 
     vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
     X = vectorizer.fit_transform(cleaned).toarray()
